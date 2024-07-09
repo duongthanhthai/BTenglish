@@ -48,7 +48,7 @@ GetSysInfo(){
 	echo -e ${SYS_VERSION}
 	echo -e Bit:${SYS_BIT} Mem:${MEM_TOTAL}M Core:${CPU_INFO}
 	echo -e ${SYS_INFO}
-	echo -e "请截图以上报错信息发帖至论坛www.bt.cn/bbs求助"
+	echo -e "Please take a screenshot of the above error message and post it on the forum at www.bt.cn/bbs for assistance."
 }
 Red_Error(){
 	echo '=================================================';
@@ -77,7 +77,7 @@ Install_Check(){
 	read -p "Type yes to force installation: " yes;
 	if [ "$yes" != "yes" ];then
 		echo -e "------------"
-		echo "取消安装"
+		echo "Cancel installation."
 		exit;
 	fi
 	INSTALL_FORCE="true"
@@ -219,12 +219,16 @@ Install_RPM_Pack(){
 
 	#SYS_TYPE=$(uname -a|grep x86_64)
 	#yumBaseUrl=$(cat /etc/yum.repos.d/CentOS-Base.repo|grep baseurl=http|cut -d '=' -f 2|cut -d '$' -f 1|head -n 1)
-	#[ "${yumBaseUrl}" ] && checkYumRepo=$(curl --connect-timeout 5 --head -s -o /dev/null -w %{http_code} ${yumBaseUrl})	
-	#if [ "${checkYumRepo}" != "200" ] && [ "${SYS_TYPE}" ];then
-	#	curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/yumRepo_select.sh|bash
+	#[ "${yumBaseUrl}" ] && checkYumRepo=$(curl --connect-timeout 5 --head -s -o /dev/null -w %{http_code} ${yumBaseUrl})
+	#if [ "${checkYumRepo}" != "200" ] && [ "${SYS_TYPE}" ]; then
+	#    curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/yumRepo_select.sh | bash
+	#    if [ $? -ne 0 ]; then
+	#        curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/duongthanhthai/BTenglish/main/yumRepo_select.sh | bash
+	#    fi
 	#fi
+
 	
-	#尝试同步时间(从bt.cn)
+	#Attempt to synchronize time (from bt.cn)
 	echo 'Synchronizing system time...'
 	getBtTime=$(curl -sS --connect-timeout 3 -m 60 http://www.bt.cn/api/index/get_time)
 	if [ "${getBtTime}" ];then	
@@ -236,7 +240,7 @@ Install_RPM_Pack(){
 		rm -rf /etc/localtime
 		ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-		#尝试同步国际时间(从ntp服务器)
+		#Attempt to synchronize international time (from NTP server).
 		ntpdate 0.asia.pool.ntp.org
 		setenforce 0
 	fi
@@ -355,32 +359,39 @@ Get_Versions(){
 	fi
 }
 Install_Python_Lib(){
-	curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/pip_select.sh|bash
-	pyenv_path="/www/server/panel"
-	if [ -f $pyenv_path/pyenv/bin/python ];then
-	 	is_ssl=$($python_bin -c "import ssl" 2>&1|grep cannot)
-		$pyenv_path/pyenv/bin/python3.7 -V
-		if [ $? -eq 0 ] && [ -z "${is_ssl}" ];then
-			chmod -R 700 $pyenv_path/pyenv/bin
-			is_package=$($python_bin -m psutil 2>&1|grep package)
-			if [ "$is_package" = "" ];then
-				wget -O $pyenv_path/pyenv/pip.txt $download_Url/install/pyenv/pip.txt -T 5
-				$pyenv_path/pyenv/bin/pip install -U pip
-				$pyenv_path/pyenv/bin/pip install -U setuptools
-				$pyenv_path/pyenv/bin/pip install -r $pyenv_path/pyenv/pip.txt
-			fi
-			source $pyenv_path/pyenv/bin/activate
-			return
-		else
-			rm -rf $pyenv_path/pyenv
-		fi
-	fi
+	curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/pip_select.sh | bash
+    result=$?
+    if [ $result -ne 0 ]; then
+        # If the first script fails, try the backup link
+        curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/duongthanhthai/BTenglish/main/pip_select.sh | bash
+        result=$?
+    fi
+    
+    pyenv_path="/www/server/panel"
+    if [ -f $pyenv_path/pyenv/bin/python ]; then
+        is_ssl=$($python_bin -c "import ssl" 2>&1 | grep cannot)
+        $pyenv_path/pyenv/bin/python3.7 -V
+        if [ $? -eq 0 ] && [ -z "${is_ssl}" ]; then
+            chmod -R 700 $pyenv_path/pyenv/bin
+            is_package=$($python_bin -m psutil 2>&1 | grep package)
+            if [ "$is_package" = "" ]; then
+                wget -O $pyenv_path/pyenv/pip.txt $download_Url/install/pyenv/pip.txt -T 5
+                $pyenv_path/pyenv/bin/pip install -U pip
+                $pyenv_path/pyenv/bin/pip install -U setuptools
+                $pyenv_path/pyenv/bin/pip install -r $pyenv_path/pyenv/pip.txt
+            fi
+            source $pyenv_path/pyenv/bin/activate
+            return
+        else
+            rm -rf $pyenv_path/pyenv
+        fi
+    fi
 
 	py_version="3.7.8"
 	mkdir -p $pyenv_path
 	echo "True" > /www/disk.pl
 	if [ ! -w /www/disk.pl ];then
-		Red_Error "ERROR: Install python env fielded." "ERROR: /www目录无法写入，请检查目录/用户/磁盘权限！"
+		Red_Error "ERROR: Install python env fielded." "ERROR: /www Directory cannot be written to. Please check directory/user/disk permissions."
 	fi
 	os_type='el'
 	os_version='7'
