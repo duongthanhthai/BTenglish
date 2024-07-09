@@ -10,18 +10,18 @@ fi
 
 is64bit=$(getconf LONG_BIT)
 if [ "${is64bit}" != '64' ];then
-	Red_Error "抱歉, 当前面板版本不支持32位系统, 请使用64位系统或安装BT5.9!";
+	Red_Error "Sorry, the current panel version does not support 32-bit systems. Please use a 64-bit system or install BT5.9.!";
 fi
 
 Centos6Check=$(cat /etc/redhat-release | grep ' 6.' | grep -iE 'centos|Red Hat')
 if [ "${Centos6Check}" ];then
-	echo "Centos6不支持安装BT面板，请更换Centos7/8安装BT面板"
+	echo "CentOS 6 does not support the installation of the BT panel. Please switch to CentOS 7/8 to install the BT panel."
 	exit 1
 fi 
 
 UbuntuCheck=$(cat /etc/issue|grep Ubuntu|awk '{print $2}'|cut -f 1 -d '.')
 if [ "${UbuntuCheck}" -lt "16" ];then
-	echo "Ubuntu ${UbuntuCheck}不支持安装BT面板，建议更换Ubuntu18/20安装BT面板"
+	echo "Ubuntu ${UbuntuCheck}The BT panel installation is not supported. It is recommended to switch to Ubuntu 18/20 to install the BT panel."
 	exit 1
 fi
 
