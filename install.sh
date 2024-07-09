@@ -4,24 +4,24 @@ export PATH
 LANG=en_US.UTF-8
 
 if [ $(whoami) != "root" ];then
-	echo "Please use root privileges to execute the BT installation command!"
+	echo "请使用root权限执行宝塔安装命令！"
 	exit 1;
 fi
 
 is64bit=$(getconf LONG_BIT)
 if [ "${is64bit}" != '64' ];then
-	Red_Error "Sorry, the current panel version does not support 32-bit systems. Please use a 64-bit system or install BT5.9.!";
+	Red_Error "抱歉, 当前面板版本不支持32位系统, 请使用64位系统或安装宝塔5.9!";
 fi
 
 Centos6Check=$(cat /etc/redhat-release | grep ' 6.' | grep -iE 'centos|Red Hat')
 if [ "${Centos6Check}" ];then
-	echo "CentOS 6 does not support the installation of the BT panel. Please switch to CentOS 7/8 to install the BT panel."
+	echo "Centos6不支持安装宝塔面板，请更换Centos7/8安装宝塔面板"
 	exit 1
 fi 
 
 UbuntuCheck=$(cat /etc/issue|grep Ubuntu|awk '{print $2}'|cut -f 1 -d '.')
 if [ "${UbuntuCheck}" -lt "16" ];then
-	echo "Ubuntu ${UbuntuCheck}The BT panel installation is not supported. It is recommended to switch to Ubuntu 18/20 to install the BT panel."
+	echo "Ubuntu ${UbuntuCheck}不支持安装宝塔面板，建议更换Ubuntu18/20安装宝塔面板"
 	exit 1
 fi
 
@@ -48,7 +48,7 @@ GetSysInfo(){
 	echo -e ${SYS_VERSION}
 	echo -e Bit:${SYS_BIT} Mem:${MEM_TOTAL}M Core:${CPU_INFO}
 	echo -e ${SYS_INFO}
-	echo -e "Please take a screenshot of the above error message and post it on the forum at www.bt.cn/bbs for assistance."
+	echo -e "请截图以上报错信息发帖至论坛www.bt.cn/bbs求助"
 }
 Red_Error(){
 	echo '=================================================';
@@ -70,14 +70,14 @@ Install_Check(){
 		return
 	fi
 	echo -e "----------------------------------------------------"
-	echo -e "Please check for existing Web/MySQL environments. Installing BT may affect current sites and data."
+	echo -e "检查已有其他Web/mysql环境，安装宝塔可能影响现有站点及数据"
 	echo -e "Web/mysql service is alreday installed,Can't install panel"
 	echo -e "----------------------------------------------------"
-	echo -e "Known risks./Enter yes to force installation"
-	read -p "Type yes to force installation: " yes;
+	echo -e "已知风险/Enter yes to force installation"
+	read -p "输入yes强制安装: " yes;
 	if [ "$yes" != "yes" ];then
 		echo -e "------------"
-		echo "Cancel installation."
+		echo "取消安装"
 		exit;
 	fi
 	INSTALL_FORCE="true"
@@ -219,16 +219,12 @@ Install_RPM_Pack(){
 
 	#SYS_TYPE=$(uname -a|grep x86_64)
 	#yumBaseUrl=$(cat /etc/yum.repos.d/CentOS-Base.repo|grep baseurl=http|cut -d '=' -f 2|cut -d '$' -f 1|head -n 1)
-	#[ "${yumBaseUrl}" ] && checkYumRepo=$(curl --connect-timeout 5 --head -s -o /dev/null -w %{http_code} ${yumBaseUrl})
-	#if [ "${checkYumRepo}" != "200" ] && [ "${SYS_TYPE}" ]; then
-	#    curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/yumRepo_select.sh | bash
-	#    if [ $? -ne 0 ]; then
-	#        curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/duongthanhthai/BTenglish/main/yumRepo_select.sh | bash
-	#    fi
+	#[ "${yumBaseUrl}" ] && checkYumRepo=$(curl --connect-timeout 5 --head -s -o /dev/null -w %{http_code} ${yumBaseUrl})	
+	#if [ "${checkYumRepo}" != "200" ] && [ "${SYS_TYPE}" ];then
+	#	curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/yumRepo_select.sh|bash
 	#fi
-
 	
-	#Attempt to synchronize time (from bt.cn)
+	#尝试同步时间(从bt.cn)
 	echo 'Synchronizing system time...'
 	getBtTime=$(curl -sS --connect-timeout 3 -m 60 http://www.bt.cn/api/index/get_time)
 	if [ "${getBtTime}" ];then	
@@ -240,7 +236,7 @@ Install_RPM_Pack(){
 		rm -rf /etc/localtime
 		ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-		#Attempt to synchronize international time (from NTP server).
+		#尝试同步国际时间(从ntp服务器)
 		ntpdate 0.asia.pool.ntp.org
 		setenforce 0
 	fi
@@ -359,39 +355,32 @@ Get_Versions(){
 	fi
 }
 Install_Python_Lib(){
-	curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/pip_select.sh | bash
-    result=$?
-    if [ $result -ne 0 ]; then
-        # If the first script fails, try the backup link
-        curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/duongthanhthai/BTenglish/main/pip_select.sh | bash
-        result=$?
-    fi
-    
-    pyenv_path="/www/server/panel"
-    if [ -f $pyenv_path/pyenv/bin/python ]; then
-        is_ssl=$($python_bin -c "import ssl" 2>&1 | grep cannot)
-        $pyenv_path/pyenv/bin/python3.7 -V
-        if [ $? -eq 0 ] && [ -z "${is_ssl}" ]; then
-            chmod -R 700 $pyenv_path/pyenv/bin
-            is_package=$($python_bin -m psutil 2>&1 | grep package)
-            if [ "$is_package" = "" ]; then
-                wget -O $pyenv_path/pyenv/pip.txt $download_Url/install/pyenv/pip.txt -T 5
-                $pyenv_path/pyenv/bin/pip install -U pip
-                $pyenv_path/pyenv/bin/pip install -U setuptools
-                $pyenv_path/pyenv/bin/pip install -r $pyenv_path/pyenv/pip.txt
-            fi
-            source $pyenv_path/pyenv/bin/activate
-            return
-        else
-            rm -rf $pyenv_path/pyenv
-        fi
-    fi
+	curl -Ss --connect-timeout 3 -m 60 https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/pip_select.sh|bash
+	pyenv_path="/www/server/panel"
+	if [ -f $pyenv_path/pyenv/bin/python ];then
+	 	is_ssl=$($python_bin -c "import ssl" 2>&1|grep cannot)
+		$pyenv_path/pyenv/bin/python3.7 -V
+		if [ $? -eq 0 ] && [ -z "${is_ssl}" ];then
+			chmod -R 700 $pyenv_path/pyenv/bin
+			is_package=$($python_bin -m psutil 2>&1|grep package)
+			if [ "$is_package" = "" ];then
+				wget -O $pyenv_path/pyenv/pip.txt $download_Url/install/pyenv/pip.txt -T 5
+				$pyenv_path/pyenv/bin/pip install -U pip
+				$pyenv_path/pyenv/bin/pip install -U setuptools
+				$pyenv_path/pyenv/bin/pip install -r $pyenv_path/pyenv/pip.txt
+			fi
+			source $pyenv_path/pyenv/bin/activate
+			return
+		else
+			rm -rf $pyenv_path/pyenv
+		fi
+	fi
 
 	py_version="3.7.8"
 	mkdir -p $pyenv_path
 	echo "True" > /www/disk.pl
 	if [ ! -w /www/disk.pl ];then
-		Red_Error "ERROR: Install python env fielded." "ERROR: /www Directory cannot be written to. Please check directory/user/disk permissions."
+		Red_Error "ERROR: Install python env fielded." "ERROR: /www目录无法写入，请检查目录/用户/磁盘权限！"
 	fi
 	os_type='el'
 	os_version='7'
@@ -422,7 +411,7 @@ Install_Python_Lib(){
 			chmod -R 700 $pyenv_path/pyenv/bin
 			if [ ! -f $pyenv_path/pyenv/bin/python ];then
 				rm -f $pyenv_file
-				Red_Error "ERROR: Install python env fielded." "ERROR: Failed to download BT runtime environment. Please try reinstalling.！" 
+				Red_Error "ERROR: Install python env fielded." "ERROR: 下载宝塔运行环境失败，请尝试重新安装！" 
 			fi
 			$pyenv_path/pyenv/bin/python3.7 -V
 			if [ $? -eq 0 ];then
@@ -445,7 +434,7 @@ Install_Python_Lib(){
 	tmp_size=$(du -b $python_src|awk '{print $1}')
 	if [ $tmp_size -lt 10703460 ];then
 		rm -f $python_src
-		Red_Error "ERROR: Download python source code fielded." "ERROR: Failed to download BT runtime environment. Please try reinstalling.！"
+		Red_Error "ERROR: Download python source code fielded." "ERROR: 下载宝塔运行环境失败，请尝试重新安装！"
 	fi
 	tar xvf $python_src
 	rm -f $python_src
@@ -455,7 +444,7 @@ Install_Python_Lib(){
 	make install
 	if [ ! -f $pyenv_path/pyenv/bin/python3.7 ];then
 		rm -rf $python_src_path
-		Red_Error "ERROR: Make python env fielded." "ERROR: Compilation of BT runtime environment failed!"
+		Red_Error "ERROR: Make python env fielded." "ERROR: 编译宝塔运行环境失败！"
 	fi
 	cd ~
 	rm -rf $python_src_path
@@ -501,7 +490,7 @@ Install_Bt(){
 
 	wget -O /etc/init.d/bt https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/src/bt6.init -T 10
 	wget -O /www/server/panel/install/public.sh https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/public.sh -T 10
-	wget -O panel.zip https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/src/panel6.zip -T 10
+	wget -O panel.zip https://node.aapanel.com/install/src/panel_7_en.zip -T 10
 
 	if [ -f "${setup_path}/server/panel/data/default.db" ];then
 		if [ -d "/${setup_path}/server/panel/old_data" ];then
@@ -539,7 +528,7 @@ Install_Bt(){
 
 	if [ ! -f ${setup_path}/server/panel/tools.py ] || [ ! -f ${setup_path}/server/panel/BT-Panel ];then
 		ls -lh panel.zip
-		Red_Error "ERROR: Failed to download, please try install again!" "ERROR: Failed to download BT. Please try reinstalling!"
+		Red_Error "ERROR: Failed to download, please try install again!" "ERROR: 下载宝塔失败，请尝试重新安装！"
 	fi
 
 	rm -f panel.zip
@@ -551,8 +540,8 @@ Install_Bt(){
 	chmod -R +x ${setup_path}/server/panel/script
 	ln -sf /etc/init.d/bt /usr/bin/bt
 	echo "${panelPort}" > ${setup_path}/server/panel/data/port.pl
-	wget -O /etc/init.d/bt https://raw.githubusercontent.com/duongthanhthai/BTenglish/main/bt7.init -T 10
-	wget -O /www/server/panel/init.sh https://raw.githubusercontent.com/duongthanhthai/BTenglish/main/bt7.init -T 10
+	wget -O /etc/init.d/bt https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/src/bt7.init -T 10
+	wget -O /www/server/panel/init.sh https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/src/bt7.init -T 10
 	wget -O /www/server/panel/data/softList.conf ${download_Url}/install/conf/softList.conf
 }
 Set_Bt_Panel(){
@@ -583,7 +572,7 @@ Set_Bt_Panel(){
 		touch t.pl
 		ls -al python3.7 python
 		lsattr python3.7 python
-		Red_Error "ERROR: The BT-Panel service startup failed." "ERROR: BT启动失败"
+		Red_Error "ERROR: The BT-Panel service startup failed." "ERROR: 宝塔启动失败"
 	fi
 }
 Set_Firewall(){
@@ -739,13 +728,13 @@ echo > /www/server/panel/data/bind.pl
 echo -e "=================================================================="
 echo -e "\033[32mCongratulations! Installed successfully!\033[0m"
 echo -e "=================================================================="
-echo  "Public-facing panel address: http://${getIpAddress}:${panelPort}${auth_path}"
-echo  "Internal panel address: http://${LOCAL_IP}:${panelPort}${auth_path}"
+echo  "外网面板地址: http://${getIpAddress}:${panelPort}${auth_path}"
+echo  "内网面板地址: http://${LOCAL_IP}:${panelPort}${auth_path}"
 echo -e "username: $username"
 echo -e "password: $password"
 echo -e "\033[33mIf you cannot access the panel,\033[0m"
 echo -e "\033[33mrelease the following panel port [${panelPort}] in the security group\033[0m"
-echo -e "\033[33mIf you cannot access the panel, please check if the firewall/security group allows the panel.[${panelPort}]端口\033[0m"
+echo -e "\033[33m若无法访问面板，请检查防火墙/安全组是否有放行面板[${panelPort}]端口\033[0m"
 echo -e "=================================================================="
 
 endTime=`date +%s`
