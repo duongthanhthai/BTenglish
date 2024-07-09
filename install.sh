@@ -422,7 +422,7 @@ Install_Python_Lib(){
 			chmod -R 700 $pyenv_path/pyenv/bin
 			if [ ! -f $pyenv_path/pyenv/bin/python ];then
 				rm -f $pyenv_file
-				Red_Error "ERROR: Install python env fielded." "ERROR: 下载BT运行环境失败，请尝试重新安装！" 
+				Red_Error "ERROR: Install python env fielded." "ERROR: Failed to download BT runtime environment. Please try reinstalling.！" 
 			fi
 			$pyenv_path/pyenv/bin/python3.7 -V
 			if [ $? -eq 0 ];then
@@ -445,7 +445,7 @@ Install_Python_Lib(){
 	tmp_size=$(du -b $python_src|awk '{print $1}')
 	if [ $tmp_size -lt 10703460 ];then
 		rm -f $python_src
-		Red_Error "ERROR: Download python source code fielded." "ERROR: 下载BT运行环境失败，请尝试重新安装！"
+		Red_Error "ERROR: Download python source code fielded." "ERROR: Failed to download BT runtime environment. Please try reinstalling.！"
 	fi
 	tar xvf $python_src
 	rm -f $python_src
@@ -455,7 +455,7 @@ Install_Python_Lib(){
 	make install
 	if [ ! -f $pyenv_path/pyenv/bin/python3.7 ];then
 		rm -rf $python_src_path
-		Red_Error "ERROR: Make python env fielded." "ERROR: 编译BT运行环境失败！"
+		Red_Error "ERROR: Make python env fielded." "ERROR: Compilation of BT runtime environment failed!"
 	fi
 	cd ~
 	rm -rf $python_src_path
@@ -539,7 +539,7 @@ Install_Bt(){
 
 	if [ ! -f ${setup_path}/server/panel/tools.py ] || [ ! -f ${setup_path}/server/panel/BT-Panel ];then
 		ls -lh panel.zip
-		Red_Error "ERROR: Failed to download, please try install again!" "ERROR: 下载BT失败，请尝试重新安装！"
+		Red_Error "ERROR: Failed to download, please try install again!" "ERROR: Failed to download BT. Please try reinstalling!"
 	fi
 
 	rm -f panel.zip
@@ -551,8 +551,8 @@ Install_Bt(){
 	chmod -R +x ${setup_path}/server/panel/script
 	ln -sf /etc/init.d/bt /usr/bin/bt
 	echo "${panelPort}" > ${setup_path}/server/panel/data/port.pl
-	wget -O /etc/init.d/bt https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/src/bt7.init -T 10
-	wget -O /www/server/panel/init.sh https://raw.githubusercontent.com/8838/btpanel-v7.7.0/main/install/src/bt7.init -T 10
+	wget -O /etc/init.d/bt https://raw.githubusercontent.com/duongthanhthai/BTenglish/main/bt7.init -T 10
+	wget -O /www/server/panel/init.sh https://raw.githubusercontent.com/duongthanhthai/BTenglish/main/bt7.init -T 10
 	wget -O /www/server/panel/data/softList.conf ${download_Url}/install/conf/softList.conf
 }
 Set_Bt_Panel(){
@@ -739,13 +739,13 @@ echo > /www/server/panel/data/bind.pl
 echo -e "=================================================================="
 echo -e "\033[32mCongratulations! Installed successfully!\033[0m"
 echo -e "=================================================================="
-echo  "外网面板地址: http://${getIpAddress}:${panelPort}${auth_path}"
-echo  "内网面板地址: http://${LOCAL_IP}:${panelPort}${auth_path}"
+echo  "Public-facing panel address: http://${getIpAddress}:${panelPort}${auth_path}"
+echo  "Internal panel address: http://${LOCAL_IP}:${panelPort}${auth_path}"
 echo -e "username: $username"
 echo -e "password: $password"
 echo -e "\033[33mIf you cannot access the panel,\033[0m"
 echo -e "\033[33mrelease the following panel port [${panelPort}] in the security group\033[0m"
-echo -e "\033[33m若无法访问面板，请检查防火墙/安全组是否有放行面板[${panelPort}]端口\033[0m"
+echo -e "\033[33mIf you cannot access the panel, please check if the firewall/security group allows the panel.[${panelPort}]端口\033[0m"
 echo -e "=================================================================="
 
 endTime=`date +%s`
